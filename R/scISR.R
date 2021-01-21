@@ -27,12 +27,12 @@
 #' imputed <- scISR(data = raw)
 #'
 #' # Perform PCA and k-means clustering on raw data
-#' library(irlba)
-#' library(mclust)
 #' set.seed(1)
-#' pca_raw <- irlba::irlba(t(raw), nv = 20)$u
+#' # Filter genes that have only zeros from raw data
+#' raw_filer <- raw[rowSums(raw != 0) > 0, ]
+#' pca_raw <- irlba::irlba(t(raw_filer), nv = 20)$u
 #' cluster_raw <- kmeans(pca_raw, length(unique(label)), nstart = 2000, iter.max = 2000)$cluster
-#' print(paste('ARI of clusters using raw data:', adjustedRandIndex(cluster_raw, label)))
+#' print(paste('ARI of clusters using raw data:', round(adjustedRandIndex(cluster_raw, label),3)))
 #'
 #' # Perform PCA and k-means clustering on imputed data
 #' set.seed(1)
@@ -100,16 +100,17 @@ scISR <- function(data, ncores = 1, seed = 1){
   trust.matrix.pval.inferred <- trust.matrix.pval[,!keep & !suck]
   distrust.matrix.pval.inferred <- distrust.matrix.pval[,!keep & !suck]
 
-  needImpute <- ncol(goodData) > 500 & ncol(inferredData) > 100
+  needImpute <- ncol(goodData) > 2000 & ncol(inferredData) > 100
   if (needImpute) {
-    set.seed(seed)
     if(nrow(data) > 1e4)
     {
+      set.seed(seed)
       result <- PINSPlus::PerturbationClustering(data = t(goodData), ncore = ncores)
 
       clusters <- result$cluster
       names(clusters) <- colnames(goodData)
     } else {
+      set.seed(seed)
       result <- PINSPerturbationClustering(data = t(goodData), Kmax = 5,
                                        PCAFunction = function(x){irlba::prcomp_irlba(x, n = 10)$x},
                                        iter = 100, kmIter = 100)

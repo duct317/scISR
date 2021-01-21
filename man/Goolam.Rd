@@ -11,6 +11,6 @@ An object of class \code{list} of length 2.
 Goolam
 }
 \description{
-Goolam dataset with data and cell types information.
+Goolam dataset with data and cell types information.The number of genes is reduced to 5,000.
 }
 \keyword{datasets}

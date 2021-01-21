@@ -27,23 +27,21 @@ is used for imputation on the imputable data.
 
 # Load the package
 library(scISR)
-# Load SingleCellExperiment package to read dataset
-library(SingleCellExperiment)
 # Load Goolam dataset
-data('Goolam'); raw <- assay(Goolam); label <- Goolam$cell_type1
-# Log transform the raw data
-raw <- log2(raw + 1)
+data('Goolam'); raw <- Goolam$data; label <- Goolam$label
+# Log transform the raw data if necessary
+if(max(data) > 100) raw <- log2(raw + 1)
 
 # Perform the imputation
 imputed <- scISR(data = raw)
 
 # Perform PCA and k-means clustering on raw data
-library(irlba)
-library(mclust)
 set.seed(1)
-pca_raw <- irlba::irlba(t(raw), nv = 20)$u
+# Filter genes that have only zeros from raw data
+raw_filer <- raw[rowSums(raw != 0) > 0, ]
+pca_raw <- irlba::irlba(t(raw_filer), nv = 20)$u
 cluster_raw <- kmeans(pca_raw, length(unique(label)), nstart = 2000, iter.max = 2000)$cluster
-print(paste('ARI of clusters using raw data:', adjustedRandIndex(cluster_raw, label)))
+print(paste('ARI of clusters using raw data:', round(adjustedRandIndex(cluster_raw, label),3)))
 
 # Perform PCA and k-means clustering on imputed data
 set.seed(1)

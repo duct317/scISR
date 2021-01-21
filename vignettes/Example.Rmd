@@ -1,0 +1,80 @@
+---
+title: "scISR package manual"
+author: "Duc Tran"
+date: "`r Sys.Date()`"
+output:
+    BiocStyle::html_document:
+        toc: true
+vignette: >
+    %\VignetteIndexEntry{scISR package manual}
+    \usepackage[utf8]{inputenc}
+    %\VignetteEngine{knitr::rmarkdown}
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r knitr-options, echo=FALSE, message=FALSE, warning=FALSE}
+library(knitr)
+opts_chunk$set(fig.align = 'center', fig.width = 6, fig.height = 5, dev = 'png')
+```
+
+# Introduction
+Recent advances in biochemistry and single-cell RNA sequencing (scRNA-seq) have allowed us to monitor the biological systems at the single-cell resolution. However, the low capture of mRNA material within individual cells often leads to inaccurate quantification of genetic material. Consequently, a significant amount of expression values are reported as missing, which are often referred to as dropouts. These missing information can heavily impact the accuracy of downstream analyses.
+
+To addreess this problem, we introduce a novel inputation method, names single-cell Imputation via Subspace Regression (scISR). scISR performs imputation for single-cell sequencing data. scISR identifies the true dropout values in the scRNA-seq dataset using hyper-geomtric testing approach. Based on the result obtained from hyper-geometric testing, the original dataset is segregated into two including training data and imputable data. Next, training data is used for constructing a generalize linear regression model that is used for imputation on the imputable data.  
+
+# Installation
+The `scISR` package can be installed from GitHub using `devtools` package
+```{r, eval=FALSE}
+# Install devtools package
+utils::install.packages('devtools')
+# Install scISR from GitHub
+devtools::install_github('duct317/scISR')
+```
+
+# Using scISR
+## Preparing data
+Load the example, Goolam dataset. The data is a list consists of two elements: data matrix with rows as genes and columns as samples, and a vector with the cell types information.
+```{r, eval=TRUE}
+#Load required library
+library(scISR)
+
+# Load example data (Goolam dataset with reduced number of genes), other dataset can be download from our server at http://scisr.tinnguyen-lab.com/
+data('Goolam')
+# Raw data
+raw <- Goolam$data
+# Cell types information
+label <- Goolam$label
+```
+
+## Imputation
+We can use the main funtion `scISR` to impute the raw data. 
+```{r, eval=TRUE}
+# Generating subtyping result
+set.seed(1)
+imputed <- scISR(data = raw, ncores = 4)
+```
+
+## Result evaluation
+The quality of the imputation can be evaluated using clustering analysis. We can evaluate the accuracy of clusters obtained from clustering analysis using raw and imputed data with adjusted Rand Index (ARI). Higher ARI means higher agreement between a given clustering and the ground truth. The clusters from imputed data have much higher accuracy. 
+```{r, eval=TRUE}
+library(irlba)
+library(mclust)
+# Perform PCA and k-means clustering on raw data
+set.seed(1)
+# Filter genes that have only zeros from raw data
+raw_filer <- raw[rowSums(raw != 0) > 0, ]
+pca_raw <- irlba::irlba(t(raw_filer), nv = 20)$u
+cluster_raw <- kmeans(pca_raw, length(unique(label)), nstart = 2000, iter.max = 2000)$cluster
+print(paste('ARI of clusters using raw data:', round(adjustedRandIndex(cluster_raw, label),3)))
+
+# Perform PCA and k-means clustering on imputed data
+set.seed(1)
+pca_imputed <- irlba::irlba(t(imputed), nv = 20)$u
+cluster_imputed <- kmeans(pca_imputed, length(unique(label)), nstart = 2000, iter.max = 2000)$cluster
+print(paste('ARI of clusters using imputed data:', round(adjustedRandIndex(cluster_imputed, label),3)))
+```
+
+```{r, eval=TRUE}
+sessionInfo()
+```

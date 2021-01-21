@@ -13,17 +13,17 @@ scISR performs imputation for single-cell sequencing data. scISR identifies the 
 ## Result assessment
 - Perform PCA and k-means clustering on raw data:
 ```R
-library(irlba)
-library(mclust)
 set.seed(1)
-pca_raw <- irlba::irlba(t(raw), nv = 20)$u
+# Filter genes that have only zeros from raw data
+raw_filer <- raw[rowSums(raw != 0) > 0, ]
+pca_raw <- irlba::irlba(t(raw_filer), nv = 20)$u
 cluster_raw <- kmeans(pca_raw, length(unique(label)), nstart = 2000, iter.max = 2000)$cluster
-print(paste('ARI of clusters using raw data:', round(adjustedRandIndex(cluster_raw, label),2)))
+print(paste('ARI of clusters using raw data:', round(adjustedRandIndex(cluster_raw, label),3)))
 ```
 - Perform PCA and k-means clustering on imputed data:
 ```R
 set.seed(1)
 pca_imputed <- irlba::irlba(t(imputed), nv = 20)$u
 cluster_imputed <- kmeans(pca_imputed, length(unique(label)), nstart = 2000, iter.max = 2000)$cluster
-print(paste('ARI of clusters using imputed data:', round(adjustedRandIndex(cluster_imputed, label),2)))
+print(paste('ARI of clusters using imputed data:', round(adjustedRandIndex(cluster_imputed, label),3)))
 ```

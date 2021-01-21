@@ -75,5 +75,5 @@ linearRegression <- function (i, im, goodData, trust.matrix.pval.inferred, distr
 
 #' @title Goolam
 #'
-#' @description Goolam dataset with data and cell types information.
+#' @description Goolam dataset with data and cell types information.The number of genes is reduced to 5,000.
 "Goolam"
