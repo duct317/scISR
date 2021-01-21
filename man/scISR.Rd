@@ -29,8 +29,6 @@ is used for imputation on the imputable data.
 library(scISR)
 # Load Goolam dataset
 data('Goolam'); raw <- Goolam$data; label <- Goolam$label
-# Log transform the raw data if necessary
-if(max(data) > 100) raw <- log2(raw + 1)
 
 # Perform the imputation
 imputed <- scISR(data = raw)
