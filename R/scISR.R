@@ -57,9 +57,11 @@ scISR <- function(data, ncores = 1, seed = 1){
   data <- data[,non.zero.prob.gene > 0.01 & non.zero.gene > 2 & mean.gene > mean(data)/10]
 
   or.data <- data
+  impute_limit <- c(2000, 100)
 
   if(nrow(data) > 1e4)
   {
+    impute_limit <- c(500, 100)
     tmp <- rowSums2(data  != 0)
     if(nrow(data) > 5e4) idx <- order(tmp, decreasing = T)[1:1e4 ] else idx <- order(tmp, decreasing = T)[1:5e3 ]
     data <- data[idx, ]
@@ -100,7 +102,7 @@ scISR <- function(data, ncores = 1, seed = 1){
   trust.matrix.pval.inferred <- trust.matrix.pval[,!keep & !suck]
   distrust.matrix.pval.inferred <- distrust.matrix.pval[,!keep & !suck]
 
-  needImpute <- ncol(goodData) > 2000 & ncol(inferredData) > 100
+  needImpute <- ncol(goodData) > impute_limit[1] & ncol(inferredData) > impute_limit[2]
   if (needImpute) {
     if(nrow(data) > 1e4)
     {
@@ -132,7 +134,6 @@ scISR <- function(data, ncores = 1, seed = 1){
     newData <- as.data.frame(res)
     fi.res <- as.matrix(cbind(goodData, newData, junk))
   } else {
-    message("No need to impute")
     fi.res <- data
   }
 
