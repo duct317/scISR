@@ -7,7 +7,7 @@ Maintainer: Bang Tran <bang.t.s@nevada.unr.edu>
 Description: scISR is an imputation pipeline for scRNA-seq data. 
 License: LGPL
 Depends: R (>= 3.4), cluster, entropy, stats, utils, parallel, irlba,
-        ggplot2, Rtsne, PINSPlus
+        PINSPlus, matrixStats
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.1.1

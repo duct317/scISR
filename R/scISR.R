@@ -40,7 +40,7 @@
 #' cluster_imputed <- kmeans(pca_imputed, length(unique(label)), nstart = 2000, iter.max = 2000)$cluster
 #' print(paste('ARI of clusters using imputed data:', adjustedRandIndex(cluster_imputed, label)))
 #'
-#' @import stats utils cluster entropy parallel irlba
+#' @import stats utils cluster entropy parallel irlba matrixStats
 #' @export
 
 scISR <- function(data, ncores = 1, seed = 1){
