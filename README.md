@@ -8,7 +8,6 @@ scISR performs imputation for single-cell sequencing data. scISR identifies the 
 ## Load the Goolam dataset and perform imputation  
 - Load the package: `library(scISR)`  
 - Load Goolam dataset: `data('Goolam'); raw <- Goolam$data; label <- Goolam$label`  
-- Log transform the raw data if necessary: `if(max(data) > 100) raw <- log2(raw + 1)`  
 - Perform the imputation: `imputed <- scISR(data = raw)`  
 ## Result assessment
 - Perform PCA and k-means clustering on raw data:
