@@ -12,6 +12,8 @@ scISR performs imputation for single-cell sequencing data. scISR identifies the 
 ## Result assessment
 - Perform PCA and k-means clustering on raw data:
 ```R
+library(irlba)
+library(mclust)
 set.seed(1)
 # Filter genes that have only zeros from raw data
 raw_filer <- raw[rowSums(raw != 0) > 0, ]

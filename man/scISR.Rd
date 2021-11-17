@@ -45,6 +45,8 @@ is used for imputation on the imputable data.
 \dontrun{
 # Load the package
 library(scISR)
+library(irlba)
+library(mclust)
 # Load Goolam dataset
 data('Goolam'); raw <- Goolam$data; label <- Goolam$label
 
