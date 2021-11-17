@@ -3,7 +3,11 @@
 #'
 #' @param data Input matrix or data frame. Rows represent genes while columns represent samples
 #' @param ncores Number of cores that the algorithm should use. Default value is \code{1}.
-#' @param ncores Seed for reproducibility. Default value is \code{1}.
+#' @param force_impute Always perform imputation.
+#' @param do_fast Use fast imputation implementation.
+#' @param preprocessing Perform preprocessing on original data to filter out low quality features.
+#' @param batch_impute Perform imputation in batches to reduce memory consumption.
+#' @param seed Seed for reproducibility. Default value is \code{1}.
 #
 #' @details
 #' scISR performs imputation for single-cell sequencing data. scISR identifies the true dropout values in the scRNA-seq dataset using
@@ -15,7 +19,7 @@
 #' \code{scISR} returns an imputed single-cell expression matrix where rows represent genes while columns represent samples.
 #'
 #' @examples
-#'
+#' \dontrun{
 #' # Load the package
 #' library(scISR)
 #' # Load Goolam dataset
@@ -37,31 +41,38 @@
 #' pca_imputed <- irlba::irlba(t(imputed), nv = 20)$u
 #' cluster_imputed <- kmeans(pca_imputed, length(unique(label)), nstart = 2000, iter.max = 2000)$cluster
 #' print(paste('ARI of clusters using imputed data:', adjustedRandIndex(cluster_imputed, label)))
-#'
-#' @import stats utils cluster entropy parallel irlba matrixStats
+#'}
+#' @import stats utils cluster entropy parallel irlba matrixStats PINSPlus
 #' @export
 
-scISR <- function(data, ncores = 1, seed = 1){
+scISR <- function(data, ncores = 1, force_impute = F, do_fast = T, preprocessing = T, batch_impute = F, seed = 1){
   if (.Platform$OS.type != "unix") ncores <- 1
 
   data <- t(data)
+  if (is.null(colnames(data))) {
+    colnames(data) <- paste0('col', seq(ncol(data)))
+  }
+  colnames_save <- colnames(data)
   # Transform data into log-scale
   if (max(data) > 100) data <- log2(data+1)
 
   # Perform gene filtering
-  non.zero.gene <- colSums(data != 0)
-  non.zero.prob.gene <- colSums(data != 0)/nrow(data)
-  mean.gene <- colMeans(data)
-  data <- data[,non.zero.prob.gene > 0.01 & non.zero.gene > 2 & mean.gene > mean(data)/10]
+  if(preprocessing)
+  {
+    non.zero.gene <- colSums(data != 0)
+    non.zero.prob.gene <- colSums(data != 0)/nrow(data)
+    mean.gene <- colMeans(data)
+    data <- data[,non.zero.prob.gene > 0.01 & non.zero.gene > 2 & mean.gene > mean(data)/10]
+  }
 
   or.data <- data
-  impute_limit <- c(2000, 100)
+  impute_limit <- c(500, 500)
 
   if(nrow(data) > 1e4)
   {
-    impute_limit <- c(500, 100)
+    impute_limit <- c(500, 500)
     tmp <- rowSums2(data  != 0)
-    if(nrow(data) > 5e4) idx <- order(tmp, decreasing = T)[1:1e4 ] else idx <- order(tmp, decreasing = T)[1:5e3 ]
+    if(nrow(data) > 5e4 & !batch_impute) idx <- order(tmp, decreasing = T)[1:1e4 ] else idx <- order(tmp, decreasing = T)[1:5e3 ]
     data <- data[idx, ]
   }
 
@@ -86,7 +97,7 @@ scISR <- function(data, ncores = 1, seed = 1){
   distrust.gene.prob <- colSums(distrust.matrix.pval < 0.01)/nrow(distrust.matrix.pval)
 
   keep <- trust.gene.prob == 1
-  suck <- distrust.gene.prob > 0.5
+  if(force_impute) suck = rep(F, length(keep)) else suck <- distrust.gene.prob > 0.5
 
   data <- or.data
 
@@ -100,41 +111,57 @@ scISR <- function(data, ncores = 1, seed = 1){
   trust.matrix.pval.inferred <- trust.matrix.pval[,!keep & !suck]
   distrust.matrix.pval.inferred <- distrust.matrix.pval[,!keep & !suck]
 
-  needImpute <- ncol(goodData) > impute_limit[1] & ncol(inferredData) > impute_limit[2]
+  needImpute <- (ncol(goodData) > impute_limit[1] & ncol(inferredData) > impute_limit[2]) | force_impute
   if (needImpute) {
-    if(nrow(data) > 1e4)
-    {
-      set.seed(seed)
-      result <- PINSPlus::PerturbationClustering(data = t(goodData), ncore = ncores)
 
-      clusters <- result$cluster
-      names(clusters) <- colnames(goodData)
-    } else {
-      set.seed(seed)
-      result <- PINSPerturbationClustering(data = t(goodData), Kmax = 5,
-                                       PCAFunction = function(x){irlba::prcomp_irlba(x, n = 10)$x},
-                                       iter = 100, kmIter = 100)
-      clusters <- result$groups
-      names(clusters) <- colnames(goodData)
-    }
+    set.seed(seed)
+    result <- PINSPlus::PerturbationClustering(data = t(goodData), ncore = min(ncores, 4))
+
+    clusters <- result$cluster
+    names(clusters) <- colnames(goodData)
+
 
     centers <- matrix(ncol = length(unique(clusters)), nrow = nrow(goodData))
     for (clus in sort(unique(clusters))) {
       centers[,clus] <- rowMeans(as.matrix(goodData[,clusters==clus]))
     }
 
-    res <- mclapply(as.list(seq(ncol(inferredData))),
+    if(batch_impute & nrow(inferredData) > 5e4)
+    {
+      res <- matrix(ncol = ncol(inferredData), nrow = nrow(inferredData))
+
+      folds <- round(seq(1, nrow(inferredData), length.out = ceiling(nrow(inferredData)/5e4) + 1))
+      idx_shuffle <- sample(seq(1, nrow(inferredData)), nrow(inferredData))
+      for (i in 2:length(folds)) {
+        idx <- idx_shuffle[folds[i-1]:folds[i]]
+        inferredData_tmp <- inferredData[idx, ]
+        goodData_tmp <- goodData[idx, ]
+        centers_tmp = centers[idx, ]
+        tmp <- mclapply(as.list(seq(ncol(inferredData))),
+                        FUN = linearRegression, im = inferredData_tmp, goodData = goodData_tmp,
+                        trust.matrix.pval.inferred = trust.matrix.pval.inferred, distrust.matrix.pval.inferred = distrust.matrix.pval.inferred,
+                        centers = centers_tmp, clusters = clusters,
+                        mc.cores = ncores)
+        tmp <- as.matrix(as.data.frame(tmp))
+        res[idx, ] <- tmp
+      }
+
+    } else {
+      res <- mclapply(as.list(seq(ncol(inferredData))),
                       FUN = linearRegression, im = inferredData, goodData = goodData,
                       trust.matrix.pval.inferred = trust.matrix.pval.inferred, distrust.matrix.pval.inferred = distrust.matrix.pval.inferred,
                       centers = centers, clusters = clusters,
                       mc.cores = ncores)
+    }
 
-    newData <- as.data.frame(res)
-    fi.res <- as.matrix(cbind(goodData, newData, junk))
+    res <- as.data.frame(res)
+    colnames(res) <- colnames(inferredData)
+    res <- as.matrix(cbind(goodData, res, junk))
   } else {
-    fi.res <- data
+    res <- data
   }
-
-  fi.res <- t(fi.res)
-  return(fi.res)
+  res <- res[, colnames_save[which(colnames_save %in% colnames(res))] ]
+  res <- t(res)
+  return(res)
 }
+

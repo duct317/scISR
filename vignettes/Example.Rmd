@@ -3,20 +3,17 @@ title: "scISR package manual"
 author: "Duc Tran"
 date: "`r Sys.Date()`"
 output:
-    BiocStyle::html_document:
-        toc: true
-vignette: >
-    %\VignetteIndexEntry{scISR package manual}
-    \usepackage[utf8]{inputenc}
-    %\VignetteEngine{knitr::rmarkdown}
-editor_options: 
+  html_document:
+    df_print: paged
+
+editor_options:
   chunk_output_type: inline
+vignette: >
+  %\VignetteIndexEntry{scISR package manual}
+  %\VignetteEngine{knitr::knitr}
+  %\usepackage[UTF-8]{inputenc}
 ---
 
-```{r knitr-options, echo=FALSE, message=FALSE, warning=FALSE}
-library(knitr)
-opts_chunk$set(fig.align = 'center', fig.width = 6, fig.height = 5, dev = 'png')
-```
 
 # Introduction
 Recent advances in biochemistry and single-cell RNA sequencing (scRNA-seq) have allowed us to monitor the biological systems at the single-cell resolution. However, the low capture of mRNA material within individual cells often leads to inaccurate quantification of genetic material. Consequently, a significant amount of expression values are reported as missing, which are often referred to as dropouts. These missing information can heavily impact the accuracy of downstream analyses.
@@ -35,7 +32,7 @@ devtools::install_github('duct317/scISR')
 # Using scISR
 ## Preparing data
 Load the example, Goolam dataset. The data is a list consists of two elements: data matrix with rows as genes and columns as samples, and a vector with the cell types information.
-```{r, eval=TRUE}
+```{r, eval=FALSE}
 #Load required library
 library(scISR)
 
@@ -49,7 +46,7 @@ label <- Goolam$label
 
 ## Imputation
 We can use the main funtion `scISR` to impute the raw data. 
-```{r, eval=TRUE}
+```{r, eval=FALSE}
 # Generating subtyping result
 set.seed(1)
 imputed <- scISR(data = raw, ncores = 4)
@@ -57,7 +54,7 @@ imputed <- scISR(data = raw, ncores = 4)
 
 ## Result evaluation
 The quality of the imputation can be evaluated using clustering analysis. We can evaluate the accuracy of clusters obtained from clustering analysis using raw and imputed data with adjusted Rand Index (ARI). Higher ARI means higher agreement between a given clustering and the ground truth. The clusters from imputed data have much higher accuracy. 
-```{r, eval=TRUE}
+```{r, eval=FALSE}
 library(irlba)
 library(mclust)
 # Perform PCA and k-means clustering on raw data
@@ -75,6 +72,6 @@ cluster_imputed <- kmeans(pca_imputed, length(unique(label)), nstart = 2000, ite
 print(paste('ARI of clusters using imputed data:', round(adjustedRandIndex(cluster_imputed, label),3)))
 ```
 
-```{r, eval=TRUE}
+```{r, eval=FALSE}
 sessionInfo()
 ```

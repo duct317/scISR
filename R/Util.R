@@ -56,7 +56,7 @@ linearRegression <- function (i, im, goodData, trust.matrix.pval.inferred, distr
     if ((length(idx.trust)) < 10 | (length(idx.distrust) < 3)) return(im)
 
     tmp <- abs(cor(goodData[idx.trust,], im[idx.trust]))
-    idx.im <- order(tmp, decreasing = TRUE)[1:10]
+    idx.im <- order(tmp, decreasing = TRUE)[1:min(10, ncol(goodData))]
 
     m <-  lm(y ~ x, list(x = goodData[idx.trust,idx.im], y = im[idx.trust]))
 

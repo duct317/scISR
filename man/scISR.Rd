@@ -4,12 +4,30 @@
 \alias{scISR}
 \title{scISR: Single-cell Imputation using Subspace Regression}
 \usage{
-scISR(data, ncores = 1, seed = 1)
+scISR(
+  data,
+  ncores = 1,
+  force_impute = F,
+  do_fast = T,
+  preprocessing = T,
+  batch_impute = F,
+  seed = 1
+)
 }
 \arguments{
 \item{data}{Input matrix or data frame. Rows represent genes while columns represent samples}
 
-\item{ncores}{Seed for reproducibility. Default value is \code{1}.}
+\item{ncores}{Number of cores that the algorithm should use. Default value is \code{1}.}
+
+\item{force_impute}{Always perform imputation.}
+
+\item{do_fast}{Use fast imputation implementation.}
+
+\item{preprocessing}{Perform preprocessing on original data to filter out low quality features.}
+
+\item{batch_impute}{Perform imputation in batches to reduce memory consumption.}
+
+\item{seed}{Seed for reproducibility. Default value is \code{1}.}
 }
 \value{
 \code{scISR} returns an imputed single-cell expression matrix where rows represent genes while columns represent samples.
@@ -24,7 +42,7 @@ subsets including training data and imputable data. Next, training data is used 
 is used for imputation on the imputable data.
 }
 \examples{
-
+\dontrun{
 # Load the package
 library(scISR)
 # Load Goolam dataset
@@ -46,5 +64,5 @@ set.seed(1)
 pca_imputed <- irlba::irlba(t(imputed), nv = 20)$u
 cluster_imputed <- kmeans(pca_imputed, length(unique(label)), nstart = 2000, iter.max = 2000)$cluster
 print(paste('ARI of clusters using imputed data:', adjustedRandIndex(cluster_imputed, label)))
-
+}
 }
