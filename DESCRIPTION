@@ -1,7 +1,7 @@
 Package: scISR
 Type: Package
 Title: Single-cell Imputation using Subspace Regression
-Version: 0.1.0
+Version: 0.1.1
 Author: Bang Tran, Duc Tran, Hung Nguyen, Tin Nguyen
 Maintainer: Duc Tran <duct@nevada.unr.edu>
 Description: scISR is an imputation pipeline for scRNA-seq data. 

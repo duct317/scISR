@@ -68,7 +68,7 @@ scISR <- function(data, ncores = 1, force_impute = F, do_fast = T, preprocessing
   }
 
   or.data <- data
-  impute_limit <- c(500, 500)
+  impute_limit <- c(2000, 100)
 
   if(nrow(data) > 1e4)
   {
@@ -117,11 +117,19 @@ scISR <- function(data, ncores = 1, force_impute = F, do_fast = T, preprocessing
   if (needImpute) {
 
     set.seed(seed)
-    result <- PINSPlus::PerturbationClustering(data = t(goodData), ncore = min(ncores, 4))
+    if(nrow(data) > 1e4 | do_fast)
+    {
+      result <- PINSPlus::PerturbationClustering(data = t(goodData), ncore = ncores)
 
-    clusters <- result$cluster
-    names(clusters) <- colnames(goodData)
-
+      clusters <- result$cluster
+      names(clusters) <- colnames(goodData)
+    } else {
+      result <- PINSPerturbationClustering(data = t(goodData), Kmax = 5,
+                                           PCAFunction = function(x){irlba::prcomp_irlba(x, n = 10)$x},
+                                           iter = 100, kmIter = 100)
+      clusters <- result$groups
+      names(clusters) <- colnames(goodData)
+    }
 
     centers <- matrix(ncol = length(unique(clusters)), nrow = nrow(goodData))
     for (clus in sort(unique(clusters))) {

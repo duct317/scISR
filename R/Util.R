@@ -10,7 +10,7 @@ myFisher <- function(data, zero.gene, zero.cell, ncores = 1){
     res <- mclapply(parts, mc.cores = ncores, function(part){
         zero.gene <- zero.gene[part[1]:part[2],]
         zg <- zero.gene[sort(rep(1:nrow(zero.gene), nrow(zero.cell))),]
-        zc <- zero.cell[rep(1:nrow(zero.cell), nrow(zero.gene)),] - zg
+        zc <- zero.cell[rep(1:nrow(zero.cell), nrow(zero.gene)),] - 1 - zg
         zc[zc < 0] <- 0
         m <- zg[, 1] + zc[, 1]
         n <- zg[, 2] + zc[, 2]
