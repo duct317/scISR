@@ -1,0 +1,16 @@
+citHeader("To cite scDHA in publications use:")
+
+citEntry(entry="article",
+         title = "A novel method for single-cell data imputation using subspace regression",
+         author = personList( as.person("Duc Tran"),
+                              as.person("Bang Tran"),
+                              as.person("Hung Nguyen"),
+                              as.person("Tin Nguyen")),
+         year = 2022,
+         journal = "Scientific Reports",
+         url = "https://www.nature.com/articles/s41598-022-06500-4",
+         textVersion =
+         paste("Tran, D., Tran, B., Nguyen, H., & Nguyen, T. (2022).",
+               "A novel method for single-cell data imputation using subspace regression.",
+               "Scientific Reports, 12, 2697.",
+                "URL: https://www.nature.com/articles/s41598-022-06500-4" ) )

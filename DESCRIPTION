@@ -2,13 +2,19 @@ Package: scISR
 Type: Package
 Title: Single-cell Imputation using Subspace Regression
 Version: 0.1.1
-Author: Bang Tran, Duc Tran, Hung Nguyen, Tin Nguyen
+Authors@R: c(
+    person("Duc", "Tran", , "duct@nevada.unr.edu", role = c("aut", "cre")),
+    person("Bang", "Tran", role = c("aut")),
+    person("Hung", "Nguyen", role = c("aut")),
+    person("Tin", "Nguyen", role = c("fnd"))
+    )
 Maintainer: Duc Tran <duct@nevada.unr.edu>
-Description: scISR is an imputation pipeline for scRNA-seq data. 
+Description: 'scISR' is an imputation pipeline for single-cell RNA sequencing data. 
+  The 'scISR' method uses a hypothesis-testing technique to identify zero-valued entries that are most likely affected by dropout events and estimates the dropout values using a subspace regression model (Tran et.al. (2022) <DOI:10.1038/s41598-022-06500-4>).
 License: LGPL
 Depends: R (>= 3.4)
 Imports: cluster, entropy, stats, utils, parallel, irlba,
-        PINSPlus, matrixStats
+        PINSPlus, matrixStats, markdown
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.1.1
@@ -18,3 +24,5 @@ Suggests:
     knitr,
     mclust
 VignetteBuilder: knitr
+URL: https://github.com/duct317/scISR
+BugReports: https://github.com/duct317/scISR/issues
