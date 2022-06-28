@@ -30,3 +30,5 @@ cluster_imputed <- kmeans(pca_imputed, length(unique(label)),
                           nstart = 2000, iter.max = 2000)$cluster
 print(paste('ARI of clusters using imputed data:', round(adjustedRandIndex(cluster_imputed, label),3)))
 ```
+# Citation:
+Duc Tran, Bang Tran, Hung Nguyen, Tin Nguyen (2022). A novel method for single-cell data imputation using subspace regression. <i>Scientific Reports</i>, <b>12</b>, 2697. doi: 10.1038/s41598-022-06500-4 ([link](https://www.nature.com/articles/s41598-022-06500-4))
