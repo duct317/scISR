@@ -19,37 +19,45 @@
 #' \code{scISR} returns an imputed single-cell expression matrix where rows represent genes while columns represent samples.
 #'
 #' @examples
-#' \dontrun{
+#' {
 #' # Load the package
 #' library(scISR)
-#' library(irlba)
-#' library(mclust)
 #' # Load Goolam dataset
-#' data('Goolam'); raw <- Goolam$data; label <- Goolam$label
+#' data('Goolam');
+#' # Use only 500 random genes for example
+#' set.seed(1)
+#' raw <- Goolam$data[sample(seq_len(nrow(Goolam$data)), 500), ]
+#' label <- Goolam$label
 #'
 #' # Perform the imputation
 #' imputed <- scISR(data = raw)
 #'
-#' # Perform PCA and k-means clustering on raw data
-#' set.seed(1)
-#' # Filter genes that have only zeros from raw data
-#' raw_filer <- raw[rowSums(raw != 0) > 0, ]
-#' pca_raw <- irlba::prcomp_irlba(t(raw_filer), n = 50)$x
-#' cluster_raw <- kmeans(pca_raw, length(unique(label)),
-#'                       nstart = 2000, iter.max = 2000)$cluster
-#' print(paste('ARI of clusters using raw data:', round(adjustedRandIndex(cluster_raw, label),3)))
+#' if(requireNamespace('mclust'))
+#' {
+#'   library(mclust)
+#'   # Perform PCA and k-means clustering on raw data
+#'   set.seed(1)
+#'   # Filter genes that have only zeros from raw data
+#'   raw_filer <- raw[rowSums(raw != 0) > 0, ]
+#'   pca_raw <- irlba::prcomp_irlba(t(raw_filer), n = 50)$x
+#'   cluster_raw <- kmeans(pca_raw, length(unique(label)),
+#'                         nstart = 2000, iter.max = 2000)$cluster
+#'   print(paste('ARI of clusters using raw data:',
+#'               round(adjustedRandIndex(cluster_raw, label),3)))
 #'
-#' # Perform PCA and k-means clustering on imputed data
-#' set.seed(1)
-#' pca_imputed <- irlba::prcomp_irlba(t(imputed), n = 50)$x
-#' cluster_imputed <- kmeans(pca_imputed, length(unique(label)),
-#'                           nstart = 2000, iter.max = 2000)$cluster
-#' print(paste('ARI of clusters using imputed data:', round(adjustedRandIndex(cluster_imputed, label),3)))
+#'   # Perform PCA and k-means clustering on imputed data
+#'   set.seed(1)
+#'   pca_imputed <- irlba::prcomp_irlba(t(imputed), n = 50)$x
+#'   cluster_imputed <- kmeans(pca_imputed, length(unique(label)),
+#'                             nstart = 2000, iter.max = 2000)$cluster
+#'   print(paste('ARI of clusters using imputed data:',
+#'               round(adjustedRandIndex(cluster_imputed, label),3)))
+#' }
 #'}
 #' @import stats utils cluster entropy parallel irlba matrixStats PINSPlus
 #' @export
 
-scISR <- function(data, ncores = 1, force_impute = F, do_fast = T, preprocessing = T, batch_impute = F, seed = 1){
+scISR <- function(data, ncores = 1, force_impute = FALSE, do_fast = TRUE, preprocessing = TRUE, batch_impute = FALSE, seed = 1){
   if (.Platform$OS.type != "unix") ncores <- 1
 
   data <- t(data)
@@ -76,7 +84,7 @@ scISR <- function(data, ncores = 1, force_impute = F, do_fast = T, preprocessing
   {
     impute_limit <- c(500, 500)
     tmp <- rowSums2(data  != 0)
-    if(nrow(data) > 5e4 & !batch_impute) idx <- order(tmp, decreasing = T)[1:1e4 ] else idx <- order(tmp, decreasing = T)[1:5e3 ]
+    if(nrow(data) > 5e4 & !batch_impute) idx <- order(tmp, decreasing = TRUE)[1:1e4 ] else idx <- order(tmp, decreasing = TRUE)[1:5e3 ]
     data <- data[idx, ]
   }
 
@@ -101,7 +109,7 @@ scISR <- function(data, ncores = 1, force_impute = F, do_fast = T, preprocessing
   distrust.gene.prob <- colSums(distrust.matrix.pval < 0.01)/nrow(distrust.matrix.pval)
 
   keep <- trust.gene.prob == 1
-  if(force_impute) suck = rep(F, length(keep)) else suck <- distrust.gene.prob > 0.5
+  if(force_impute) suck = rep(FALSE, length(keep)) else suck <- distrust.gene.prob > 0.5
 
   data <- or.data
 

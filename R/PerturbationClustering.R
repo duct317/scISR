@@ -256,7 +256,7 @@ findMaxHeight <- function (hc, maxK) {
   i+1
 }
 
-pam1 <- function(x,k) list(cluster = pam(x,k, diss=T, cluster.only=TRUE))
+pam1 <- function(x,k) list(cluster = pam(x,k, diss=TRUE, cluster.only=TRUE))
 
 getSimilarityFromGrouping <- function(g) {
   N=length(g)

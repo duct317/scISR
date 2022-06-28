@@ -7,10 +7,10 @@
 scISR(
   data,
   ncores = 1,
-  force_impute = F,
-  do_fast = T,
-  preprocessing = T,
-  batch_impute = F,
+  force_impute = FALSE,
+  do_fast = TRUE,
+  preprocessing = TRUE,
+  batch_impute = FALSE,
   seed = 1
 )
 }
@@ -42,31 +42,39 @@ subsets including training data and imputable data. Next, training data is used 
 is used for imputation on the imputable data.
 }
 \examples{
-\dontrun{
+{
 # Load the package
 library(scISR)
-library(irlba)
-library(mclust)
 # Load Goolam dataset
-data('Goolam'); raw <- Goolam$data; label <- Goolam$label
+data('Goolam');
+# Use only 500 random genes for example
+set.seed(1)
+raw <- Goolam$data[sample(seq_len(nrow(Goolam$data)), 500), ]
+label <- Goolam$label
 
 # Perform the imputation
 imputed <- scISR(data = raw)
 
-# Perform PCA and k-means clustering on raw data
-set.seed(1)
-# Filter genes that have only zeros from raw data
-raw_filer <- raw[rowSums(raw != 0) > 0, ]
-pca_raw <- irlba::prcomp_irlba(t(raw_filer), n = 50)$x
-cluster_raw <- kmeans(pca_raw, length(unique(label)),
-                      nstart = 2000, iter.max = 2000)$cluster
-print(paste('ARI of clusters using raw data:', round(adjustedRandIndex(cluster_raw, label),3)))
+if(requireNamespace('mclust'))
+{
+  library(mclust)
+  # Perform PCA and k-means clustering on raw data
+  set.seed(1)
+  # Filter genes that have only zeros from raw data
+  raw_filer <- raw[rowSums(raw != 0) > 0, ]
+  pca_raw <- irlba::prcomp_irlba(t(raw_filer), n = 50)$x
+  cluster_raw <- kmeans(pca_raw, length(unique(label)),
+                        nstart = 2000, iter.max = 2000)$cluster
+  print(paste('ARI of clusters using raw data:',
+              round(adjustedRandIndex(cluster_raw, label),3)))
 
-# Perform PCA and k-means clustering on imputed data
-set.seed(1)
-pca_imputed <- irlba::prcomp_irlba(t(imputed), n = 50)$x
-cluster_imputed <- kmeans(pca_imputed, length(unique(label)),
-                          nstart = 2000, iter.max = 2000)$cluster
-print(paste('ARI of clusters using imputed data:', round(adjustedRandIndex(cluster_imputed, label),3)))
+  # Perform PCA and k-means clustering on imputed data
+  set.seed(1)
+  pca_imputed <- irlba::prcomp_irlba(t(imputed), n = 50)$x
+  cluster_imputed <- kmeans(pca_imputed, length(unique(label)),
+                            nstart = 2000, iter.max = 2000)$cluster
+  print(paste('ARI of clusters using imputed data:',
+              round(adjustedRandIndex(cluster_imputed, label),3)))
+}
 }
 }
