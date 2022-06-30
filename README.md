@@ -1,9 +1,11 @@
 # scISR: Single-cell Imputation using Subspace Regression
-scISR performs imputation for single-cell sequencing data. scISR identifies the true dropout values in the scRNA-seq dataset using hyper-geomtric testing approach. Based on the result obtained from hyper-geometric testing, the original dataset is segregated into two including training data and imputable data. Next, training data is used for constructing a generalize linear regression model that is used for imputation on the imputable data.  
+scISR performs imputation for single-cell sequencing data. scISR identifies the true dropout values in the scRNA-seq dataset using hyper-geomtric testing approach. Based on the result obtained from hyper-geometric testing, the original dataset is segregated into two including training data and imputable data. Next, training data is used for constructing a generalize linear regression model that is used for imputation on the imputable data. The package is now available on [CRAN](https://cran.r-project.org/package=scISR).
 # How to install  
-- The package can be installed from this repository.  
-- Install devtools: `utils::install.packages('devtools')`  
-- Install the package using: `devtools::install_github('duct317/scISR')`  
+- The package can be installed from CRAN or this repository.  
+- Using CRAN: `install.packages("scISR")`  
+- Using devtools:  
+  - Install devtools: `utils::install.packages('devtools')`  
+  - Install the package using: `devtools::install_github('duct317/scISR')`  
 # Example   
 ## Load the Goolam dataset and perform imputation  
 - Load the package: `library(scISR)`  
